@@ -388,7 +388,7 @@ gather_bundled_assemblies_from_apk (
 				add_type_mapping (&managed_to_java_maps, apk, cur_entry_name, ((const char*) mmap_info.area) + offset);
 				continue;
 			}
-			if (strncmp ("assemblies/", cur_entry_name, sizeof ("assemblies/")-1) != 0)
+			if (strncmp ("assets/assemblies/", cur_entry_name, sizeof ("assets/assemblies/")-1) != 0)
 				continue;
 
 			// assemblies must be 4-byte aligned, or Bad Things happen
@@ -432,7 +432,7 @@ gather_bundled_assemblies_from_apk (
 			cur = (*bundle) [*bundle_count] = xcalloc (1, sizeof (MonoBundledAssembly));
 			++*bundle_count;
 
-			cur->name = monodroid_strdup_printf ("%s", strstr (cur_entry_name, "assemblies/") + sizeof ("assemblies"));
+			cur->name = monodroid_strdup_printf ("%s", strstr (cur_entry_name, "assets/assemblies/") + sizeof ("assets/assemblies"));
 			cur->data = ((const unsigned char*) mmap_info.area) + offset;
 
 			// MonoBundledAssembly::size is const?!
