@@ -9,7 +9,7 @@
     <HostTriplet64 Condition=" '$(HostTriplet64)' == '' ">x86_64-win32</HostTriplet64>
     <HostCpuCount Condition=" '$(HostCpuCount)' == '' ">$([System.Environment]::ProcessorCount)</HostCpuCount>
     <HostBits Condition=" '$(HostBits)' == '' ">64</HostBits>
-    <JavaSdkDirectory>C:\Program Files (x86)\Java\jdk1.8.0_131</JavaSdkDirectory>
+    <JavaSdkDirectory>@JAVA_HOME@</JavaSdkDirectory>
     <JavaCPath>$(JavaSdkDirectory)\bin\javac.exe</JavaCPath>
     <JarPath>$(JavaSdkDirectory)\bin\jar.exe</JarPath>
   </PropertyGroup>

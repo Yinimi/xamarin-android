@@ -10,7 +10,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 	public class JdkInfo : Task
 	{
 		[Required]
-		public ITaskItem Output { get; set; }
+		public ITaskItem ConfigurationDestination { get; set; }
+
+		[Required]
+		public ITaskItem JdkInfoDestination { get; set; }
 
 		public string AndroidNdkPath { get; set; }
 
@@ -21,7 +24,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (JdkInfo)}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (Output)}: {Output}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (ConfigurationDestination)}: {ConfigurationDestination}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (JdkInfoDestination)}: {JdkInfoDestination}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
@@ -40,6 +44,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 				Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdk.JavaSdkPath)}: {javaSdkPath}");
 
+				var xml = File.ReadAllText (ConfigurationDestination.ItemSpec).Replace("@JAVA_HOME@", javaSdkPath);
+				File.WriteAllText (ConfigurationDestination.ItemSpec, xml);
+
 				var jvmPath = Path.Combine (javaSdkPath, "jre", "bin", "server", "jvm.dll");
 				if (!File.Exists (jvmPath)) {
 					Log.LogError ($"JdkJvmPath not found at {jvmPath}");
@@ -55,8 +62,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					includeXmlTags.AppendLine ($"<JdkIncludePath Include=\"{include}\" />");
 				}
 
-				Directory.CreateDirectory (Path.GetDirectoryName (Output.ItemSpec));
-				File.WriteAllText (Output.ItemSpec, $@"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+				Directory.CreateDirectory (Path.GetDirectoryName (JdkInfoDestination.ItemSpec));
+				File.WriteAllText (JdkInfoDestination.ItemSpec, $@"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
   <Choose>
     <When Condition="" '$(JdkJvmPath)' == '' "">
       <PropertyGroup>

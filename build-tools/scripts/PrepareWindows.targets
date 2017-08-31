@@ -26,7 +26,8 @@
         AndroidSdkPath="$(AndroidSdkPath)"
         AndroidNdkPath="$(AndroidNdkPath)"
         JavaSdkPath="$(JavaSdkDirectory)"
-        Output="$(_TopDir)\external\Java.Interop\bin\BuildDebug\JdkInfo.props"
+        ConfigurationDestination="$(_TopDir)\Configuration.OperatingSystem.props"
+        JdkInfoDestination="$(_TopDir)\external\Java.Interop\bin\BuildDebug\JdkInfo.props"
     />
     <Exec Command="$(_NuGet) restore Xamarin.Android.sln" WorkingDirectory="$(_TopDir)" />
     <Exec Command="$(_NuGet) restore external\Java.Interop\Java.Interop.sln" WorkingDirectory="$(_TopDir)" />
