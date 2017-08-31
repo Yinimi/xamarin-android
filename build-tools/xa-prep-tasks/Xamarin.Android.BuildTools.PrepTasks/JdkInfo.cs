@@ -67,6 +67,10 @@ namespace Xamarin.Android.BuildTools.PrepTasks
       </ItemGroup>
     </When>
   </Choose>
+  <PropertyGroup>
+    <JavaCPath Condition="" '$(JavaCPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "javac.exe")}</JavaCPath>
+    <JarPath Condition="" '$(JarPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "jar.exe")}</JarPath>
+  </PropertyGroup>
 </Project>");
 
 				return !Log.HasLoggedErrors;
