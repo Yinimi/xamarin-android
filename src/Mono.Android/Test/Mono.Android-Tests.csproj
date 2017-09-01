@@ -108,7 +108,7 @@
       <Private>False</Private>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj">
+    <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" Condition=" '$(HostOS)' != 'Windows' ">
       <Name>Xamarin.Android.Build.Tasks</Name>
       <Project>{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}</Project>
       <Private>False</Private>
