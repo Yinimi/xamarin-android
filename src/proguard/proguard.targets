@@ -1,5 +1,11 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa-prep-tasks.dll"  TaskName="Xamarin.Android.BuildTools.PrepTasks.SetEnvironmentVar" />
   <Target Name="_BuildProGuard">
+    <SetEnvironmentVar
+        Name="JAVA_HOME" 
+        Value="$(JavaSdkDirectory)" 
+        Condition=" '$(HostOS)' == 'Windows' "
+    />
     <Exec
         Command="$(AntDirectory)\bin\ant -verbose -f buildscripts\build.xml proguard"
         WorkingDirectory="$(ProGuardSourceFullPath)"
@@ -24,6 +30,11 @@
   </Target>
   <Target Name="_CleanProGuard"
       AfterTargets="Clean">
+    <SetEnvironmentVar
+        Name="JAVA_HOME" 
+        Value="$(JavaSdkDirectory)" 
+        Condition=" '$(HostOS)' == 'Windows' "
+    />
     <Delete Files="$(OutputPath)\license.html" />
     <Delete Files="$(OutputPath)\lib\proguard.jar" />
     <Delete Files="$(OutputPath)\bin\proguard.sh" />
