@@ -9,7 +9,7 @@
   />
   <Import
       Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
-      Condition=" '$(DoNotLoadOSProperties)' != 'True' "
+      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <PropertyGroup>
     <ProductVersion>8.0.99</ProductVersion>

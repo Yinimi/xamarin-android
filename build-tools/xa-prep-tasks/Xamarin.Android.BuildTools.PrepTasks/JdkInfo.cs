@@ -10,10 +10,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 	public class JdkInfo : Task
 	{
 		[Required]
-		public ITaskItem ConfigurationOperatingSystemProps { get; set; }
-
-		[Required]
-		public ITaskItem JdkInfoProps { get; set; }
+		public ITaskItem Output { get; set; }
 
 		public string AndroidNdkPath { get; set; }
 
@@ -21,11 +18,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public string JavaSdkPath { get; set; }
 
+		[Output]
+		public string JavaSdkDirectory { get; set; }
+
 		public override bool Execute ()
 		{
 			Log.LogMessage (MessageImportance.Low, $"Task {nameof (JdkInfo)}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (ConfigurationOperatingSystemProps)}: {ConfigurationOperatingSystemProps}");
-			Log.LogMessage (MessageImportance.Low, $"  {nameof (JdkInfoProps)}: {JdkInfoProps}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (Output)}: {Output}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
@@ -44,12 +43,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 				Log.LogMessage (MessageImportance.Low, $"  {nameof (AndroidSdk.JavaSdkPath)}: {javaSdkPath}");
 
-				if (File.Exists (ConfigurationOperatingSystemProps.ItemSpec)) {
-					var xml = File.ReadAllText (ConfigurationOperatingSystemProps.ItemSpec);
-					if (xml.Contains("@JAVA_HOME@"))
-						File.WriteAllText (ConfigurationOperatingSystemProps.ItemSpec, xml.Replace ("@JAVA_HOME@", javaSdkPath));
-				}
-
 				var jvmPath = Path.Combine (javaSdkPath, "jre", "bin", "server", "jvm.dll");
 				if (!File.Exists (jvmPath)) {
 					Log.LogError ($"JdkJvmPath not found at {jvmPath}");
@@ -65,8 +58,8 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					includeXmlTags.AppendLine ($"<JdkIncludePath Include=\"{include}\" />");
 				}
 
-				Directory.CreateDirectory (Path.GetDirectoryName (JdkInfoProps.ItemSpec));
-				File.WriteAllText (JdkInfoProps.ItemSpec, $@"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+				Directory.CreateDirectory (Path.GetDirectoryName (Output.ItemSpec));
+				File.WriteAllText (Output.ItemSpec, $@"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
   <Choose>
     <When Condition="" '$(JdkJvmPath)' == '' "">
       <PropertyGroup>
@@ -82,6 +75,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
     <JarPath Condition="" '$(JarPath)' == '' "">{Path.Combine (javaSdkPath, "bin", "jar.exe")}</JarPath>
   </PropertyGroup>
 </Project>");
+
+				JavaSdkDirectory = javaSdkPath;
+				Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (JavaSdkDirectory)}: {JavaSdkDirectory}");
 
 				return !Log.HasLoggedErrors;
 			}
