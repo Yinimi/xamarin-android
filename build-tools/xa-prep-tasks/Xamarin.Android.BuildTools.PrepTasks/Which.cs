@@ -30,10 +30,13 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		{
 			var pathExt     = Environment.GetEnvironmentVariable ("PATHEXT");
 			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
-			FileExtensions  = new string [(pathExts?.Length ?? 0) + 1];
-			FileExtensions [0] = null;
+			bool isUnix     = Environment.OSVersion.Platform != PlatformID.Win32NT;
+
+			//NOTE: Unix should accept blank extensions first and Windows last
+			FileExtensions = new string [(pathExts?.Length ?? 0) + 1];
+			FileExtensions [isUnix ? 0 : FileExtensions.Length - 1] = null;
 			if (pathExts != null) {
-				Array.Copy (pathExts, 0, FileExtensions, 1, pathExts.Length);
+				Array.Copy (pathExts, 0, FileExtensions, isUnix ? 1 : 0, pathExts.Length);
 			}
 		}
 
