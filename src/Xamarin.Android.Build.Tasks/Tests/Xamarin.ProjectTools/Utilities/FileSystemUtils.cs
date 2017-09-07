@@ -29,8 +29,10 @@ namespace Xamarin.ProjectTools
 				return;
 
 			var fileInfo = new FileInfo (source);
-			if (fileInfo.IsReadOnly)
+			if (fileInfo.IsReadOnly) {
 				fileInfo.IsReadOnly = false;
+				fileInfo.Refresh ();
+			}
 		}
 	}
 }
