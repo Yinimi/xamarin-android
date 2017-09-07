@@ -10,3 +10,4 @@ packages
 TestResult.xml
 TestResult-*.xml
 .vs/
+.gradle/
