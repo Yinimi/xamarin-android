@@ -11,11 +11,17 @@ namespace Xamarin.ProjectTools
 				return;
 
 			var dirInfo = new DirectoryInfo (directory);
-			dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+			if (dirInfo.Attributes.HasFlag (FileAttributes.ReadOnly)) {
+				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+				dirInfo.Refresh ();
+			}
 
 			foreach (var dir in Directory.GetDirectories (directory, "*", SearchOption.AllDirectories)) {
 				dirInfo = new DirectoryInfo (dir);
-				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+				if (dirInfo.Attributes.HasFlag (FileAttributes.ReadOnly)) {
+					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+					dirInfo.Refresh ();
+				}
 			}
 
 			foreach (var file in Directory.GetFiles (directory, "*", SearchOption.AllDirectories)) {
