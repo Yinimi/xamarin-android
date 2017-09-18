@@ -196,8 +196,7 @@ namespace Xamarin.Android.Build.Tests
 			if (!Directory.Exists (output))
 				return;
 			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed) {
-				FileSystemUtils.SetDirectoryWriteable (output);
-				Directory.Delete (output, recursive: true);
+				FileSystemUtils.DeleteReadonly (output);
 			} else {
 				foreach (var file in Directory.GetFiles (Path.Combine (output), "build.log", SearchOption.AllDirectories)) {
 					TestContext.Out.WriteLine ("*************************************************************************");

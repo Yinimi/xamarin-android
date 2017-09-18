@@ -1,44 +1,27 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace Xamarin.ProjectTools
 {
 	public static class FileSystemUtils
 	{
-		public static void SetDirectoryWriteable (string directory)
+		/// <summary>
+		/// Recursively deletes a directory, even if a file is readonly
+		/// </summary>
+		public static void DeleteReadonly(string path)
 		{
-			if (!Directory.Exists (directory))
-				return;
+			DeleteReadonly (new DirectoryInfo (path));
+		}
 
-			var dirInfo = new DirectoryInfo (directory);
-			if (dirInfo.Attributes.HasFlag (FileAttributes.ReadOnly)) {
-				dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-				dirInfo.Refresh ();
-			}
-
-			foreach (var dir in Directory.GetDirectories (directory, "*", SearchOption.AllDirectories)) {
-				dirInfo = new DirectoryInfo (dir);
-				if (dirInfo.Attributes.HasFlag (FileAttributes.ReadOnly)) {
-					dirInfo.Attributes &= ~FileAttributes.ReadOnly;
-					dirInfo.Refresh ();
+		static void DeleteReadonly (this FileSystemInfo fileInfo)
+		{
+			if (fileInfo is DirectoryInfo directoryInfo) {
+				foreach (var child in directoryInfo.GetFileSystemInfos ()) {
+					DeleteReadonly (child);
 				}
 			}
 
-			foreach (var file in Directory.GetFiles (directory, "*", SearchOption.AllDirectories)) {
-				SetFileWriteable (Path.GetFullPath (file));
-			}
-		}
-
-		public static void SetFileWriteable (string source)
-		{
-			if (!File.Exists (source))
-				return;
-
-			var fileInfo = new FileInfo (source);
-			if (fileInfo.IsReadOnly) {
-				fileInfo.IsReadOnly = false;
-				fileInfo.Refresh ();
-			}
+			fileInfo.Attributes = FileAttributes.Normal;
+			fileInfo.Delete ();
 		}
 	}
 }

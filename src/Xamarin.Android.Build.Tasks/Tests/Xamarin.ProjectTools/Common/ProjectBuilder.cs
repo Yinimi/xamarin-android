@@ -43,8 +43,7 @@ namespace Xamarin.ProjectTools
 
 			if (!built_before) {
 				if (Directory.Exists (ProjectDirectory)) {
-					FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
-					Directory.Delete (ProjectDirectory, true);
+					FileSystemUtils.DeleteReadonly (ProjectDirectory);
 				}
 				if (Directory.Exists (PackagesDirectory))
 					Directory.Delete (PackagesDirectory, true);
@@ -103,8 +102,7 @@ namespace Xamarin.ProjectTools
 				return;
 			built_before = false;
 			if (Directory.Exists (ProjectDirectory)) {
-				FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
-				Directory.Delete (ProjectDirectory, true);
+				FileSystemUtils.DeleteReadonly (ProjectDirectory);
 			}
 		}
 
