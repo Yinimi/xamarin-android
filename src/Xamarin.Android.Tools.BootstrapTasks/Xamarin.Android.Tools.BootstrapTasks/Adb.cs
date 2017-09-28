@@ -27,6 +27,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			get { return "adb"; }
 		}
 
+		public override string ToolExe {
+			get { return base.ToolExe; }
+			set { if (value != ToolBaseName) base.ToolExe = value; }
+		}
+
 		List<string> lines;
 		List<string> Lines {
 			get { return lines ?? (lines = new List<string> ()); }
