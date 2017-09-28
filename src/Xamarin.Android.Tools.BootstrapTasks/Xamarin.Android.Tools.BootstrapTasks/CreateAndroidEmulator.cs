@@ -12,16 +12,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class CreateAndroidEmulator : Task
 	{
-		public                  string          SdkVersion      {get; set;}
-		public                  string          AndroidAbi      {get; set;}
-		public                  string          AndroidSdkHome  {get; set;}
+		public                  string          SdkVersion       {get; set;}
+		public                  string          AndroidAbi       {get; set;}
+		public                  string          AndroidSdkHome   {get; set;}
 
-		public                  string          ToolPath        {get; set;}
-		public                  string          ToolExe         {get; set;}
+		public                  string          ToolPath         {get; set;}
+		public                  string          ToolExe          {get; set;}
 
-		public                  string          TargetId        {get; set;}
+		public                  string          TargetId         {get; set;}
 
-		public                  string          ImageName       {get; set;} = "XamarinAndroidTestRunner";
+		public                  string          ImageName        {get; set;} = "XamarinAndroidTestRunner";
+		public                  string          JavaSdkDirectory {get; set;}
 
 		public override bool Execute ()
 		{
@@ -36,6 +37,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (TargetId)}: {TargetId}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (ToolExe)}: {ToolExe}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (ToolPath)}: {ToolPath}");
+			Log.LogMessage (MessageImportance.Low, $"  {nameof (JavaSdkDirectory)}: {JavaSdkDirectory}");
+
+			if (!string.IsNullOrEmpty (JavaSdkDirectory)) {
+				Environment.SetEnvironmentVariable ("JAVA_HOME", JavaSdkDirectory);
+			}
 
 			Run (GetAndroidPath ());
 
