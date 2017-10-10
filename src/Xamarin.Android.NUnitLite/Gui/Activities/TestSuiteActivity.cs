@@ -17,6 +17,7 @@ using NUnit.Framework.Internal;
 using NUnitTest = NUnit.Framework.Internal.Test;
 using Android.Text;
 using Java.Lang;
+using Java.Interop;
 using Android.Graphics;
 
 namespace Xamarin.Android.NUnitLite
@@ -91,6 +92,13 @@ namespace Xamarin.Android.NUnitLite
 				});
 			}
 			Log.Info ("NUnitLite", "NUnit automated tests loaded.");
+		}
+
+		[Export("RunTests")]
+		public string RunTests()
+		{
+			var results = AndroidRunner.Runner.Run (current_test, this);
+			return $"Passed: {results.PassCount}, Failed: {results.FailCount}, Skipped: {results.SkipCount}";
 		}
 
 		protected override void OnResume ()
