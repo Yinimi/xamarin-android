@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Reflection;
 using System.Text;
 
@@ -11,10 +12,12 @@ using Android.Runtime;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
+using NUnitLite.Runner;
 using NUnit.Framework.Api;
 using NUnit.Framework.Internal;
 
 using NUnitTest = NUnit.Framework.Internal.Test;
+using Path = System.IO.Path;
 using Android.Text;
 using Java.Lang;
 using Java.Interop;
@@ -97,8 +100,16 @@ namespace Xamarin.Android.NUnitLite
 		[Export("RunTests")]
 		public string RunTests()
 		{
-			var results = AndroidRunner.Runner.Run (current_test, this);
-			return $"Passed: {results.PassCount}, Failed: {results.FailCount}, Skipped: {results.SkipCount}";
+			try {
+				var startTime   = DateTime.Now;
+				var resultsXml  = new NUnit2XmlOutputWriter (startTime);
+				var testResult = AndroidRunner.Runner.Run (current_test, this);
+				var resultsFile = Path.GetTempFileName ();
+				resultsXml.WriteResultFile (testResult, resultsFile);
+				return File.ReadAllText (resultsFile);
+			} catch (System.Exception exc) {
+				return exc.ToString ();
+			}
 		}
 
 		protected override void OnResume ()
