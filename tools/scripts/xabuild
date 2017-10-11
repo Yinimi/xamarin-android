@@ -52,9 +52,22 @@ if [ -z "$CONFIGURATION" ]; then
 		esac
 
 		if [ -n "$CONFIGURATION" ]; then
+			for word in $CONFIGURATION; do
+				CONFIGURATION=$word
+				break
+			done
+
 			break
 		fi
 	done
+fi
+
+if [[ "$MSBUILD" == "msbuild" ]] ; then
+	if [ -z "$CONFIGURATION" ]; then
+		CONFIGURATION="Debug"
+	fi
+	exec mono "$prefix/../../bin/$CONFIGURATION/bin/xabuild.exe" "$@"
+	exit $?
 fi
 
 if [[ "$prefix" == */tools/scripts ]] ; then
