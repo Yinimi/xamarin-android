@@ -43,20 +43,17 @@ namespace Xamarin.Android.BclTests
 			Filter = App.UpdateFilter (Filter);
 		}
 
-		public override bool IsRunning
-		{
+		public override bool IsRunning {
 			[Export ("IsRunning")]
 			get => base.IsRunning;
 		}
 
-		public override string TestRunFailure
-		{
+		public override string TestRunFailure {
 			[Export ("TestRunFailure")]
 			get => base.TestRunFailure;
 		}
 
-		public override string EncodedTestResults
-		{
+		public override string EncodedTestResults {
 			[Export ("EncodedTestResults")]
 			get => base.EncodedTestResults;
 		}

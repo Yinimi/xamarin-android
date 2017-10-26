@@ -137,13 +137,12 @@ namespace Xamarin.Android.NUnitLite
 			if (IsRunning)
 				return;
 
-			Task.Factory.StartNew (() => 
-			{
+			Task.Factory.StartNew (() => {
 				try {
 					IsRunning = true;
 					var startTime   = DateTime.Now;
-					var nunitWriter  = new NUnit2XmlOutputWriter (startTime);
-					var testResult = AndroidRunner.Runner.Run (current_test, this);
+					var nunitWriter = new NUnit2XmlOutputWriter (startTime);
+					var testResult  = AndroidRunner.Runner.Run (current_test, this);
 					using (var memoryStream = new MemoryStream ()) {
 						using (var gzipStream = new GZipStream (memoryStream, CompressionMode.Compress))
 						using (var writer = new StreamWriter (gzipStream)) {
