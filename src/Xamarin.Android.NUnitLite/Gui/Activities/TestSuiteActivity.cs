@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 using Android.App;
 using Android.Content;
@@ -13,6 +16,7 @@ using Android.Views;
 using Android.Widget;
 using NUnit.Framework.Api;
 using NUnit.Framework.Internal;
+using NUnitLite.Runner;
 
 using NUnitTest = NUnit.Framework.Internal.Test;
 using Android.Text;
@@ -120,6 +124,42 @@ namespace Xamarin.Android.NUnitLite
 		public void AddTest (Assembly assembly)
 		{
 			AndroidRunner.Runner.AddTest (assembly);
+		}
+
+		public virtual bool IsRunning { get; private set; }
+
+		public virtual string TestRunFailure { get; private set; }
+
+		public virtual string EncodedTestResults { get; private set; }
+
+		public virtual void StartTests ()
+		{
+			if (IsRunning)
+				return;
+
+			Task.Factory.StartNew (() => 
+			{
+				try {
+					IsRunning = true;
+					var startTime   = DateTime.Now;
+					var nunitWriter  = new NUnit2XmlOutputWriter (startTime);
+					var testResult = AndroidRunner.Runner.Run (current_test, this);
+					using (var memoryStream = new MemoryStream ()) {
+						using (var gzipStream = new GZipStream (memoryStream, CompressionMode.Compress))
+						using (var writer = new StreamWriter (gzipStream)) {
+							nunitWriter.WriteResultFile (testResult, writer);
+						}
+
+						EncodedTestResults = Convert.ToBase64String (memoryStream.ToArray ());
+						TestRunFailure = "Success";
+					}
+				} catch (System.Exception exc) {
+					EncodedTestResults = null;
+					TestRunFailure = exc.ToString ();
+				} finally {
+					IsRunning = false;
+				}
+			});
 		}
 
 		IEnumerable<NUnitTest> GetChildTests (NUnitTest test)

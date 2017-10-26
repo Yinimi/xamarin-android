@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Android.App;
 using Android.Widget;
 using Android.OS;
+using Java.Interop;
 
 using Xamarin.Android.NUnitLite;
 
@@ -41,6 +42,27 @@ namespace Xamarin.Android.BclTests
 		{
 			Filter = App.UpdateFilter (Filter);
 		}
+
+		public override bool IsRunning
+		{
+			[Export ("IsRunning")]
+			get => base.IsRunning;
+		}
+
+		public override string TestRunFailure
+		{
+			[Export ("TestRunFailure")]
+			get => base.TestRunFailure;
+		}
+
+		public override string EncodedTestResults
+		{
+			[Export ("EncodedTestResults")]
+			get => base.EncodedTestResults;
+		}
+
+		[Export ("StartTests")]
+		public override void StartTests () => base.StartTests ();
 	}
 }
 
