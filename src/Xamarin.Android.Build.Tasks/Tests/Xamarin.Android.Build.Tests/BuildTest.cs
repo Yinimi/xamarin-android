@@ -547,7 +547,7 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
+		[Test, Platform (Exclude = "Win")]
 		public void BuildAppCheckDebugSymbols ()
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
@@ -1056,7 +1056,7 @@ namespace App1
 			}
 		}
 
-		[Test]
+		[Test, Platform (Exclude = "Win")]
 		[TestCaseSource ("RuntimeChecks")]
 		public void CheckWhichRuntimeIsIncluded (string[] supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedassebmlies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1096,7 +1096,7 @@ namespace App1
 			}
 		}
 
-		[Test]
+		[Test, Platform (Exclude = "Win")]
 		[TestCaseSource ("SequencePointChecks")]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
 			bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime)
@@ -1717,7 +1717,7 @@ public class Test
 			}
 		}
 
-		[Test]
+		[Test, Platform (Exclude = "Win")]
 		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();

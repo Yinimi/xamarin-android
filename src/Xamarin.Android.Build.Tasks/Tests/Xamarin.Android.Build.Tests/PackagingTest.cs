@@ -42,7 +42,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[Test, Platform (Exclude = "Win")]
 		public void CheckBuildIdIsUnique ()
 		{
 			Dictionary<string, string> buildIds = new Dictionary<string, string> ();
