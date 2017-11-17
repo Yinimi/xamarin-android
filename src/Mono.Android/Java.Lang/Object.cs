@@ -52,6 +52,9 @@ namespace Java.Lang {
 
 		~Object ()
 		{
+			//NOTE: for debugging, to be taken out
+			Android.Util.Log.Debug("Mono.Android", $"Java.Lang.Object Finalizer, Type={GetType()}, Handle={handle}");
+
 			if (Logger.LogGlobalRef) {
 				JNIEnv._monodroid_gref_log (
 						string.Format ("Finalizing handle 0x{0}\n", handle.ToString ("x")));
@@ -207,6 +210,8 @@ namespace Java.Lang {
 
 		protected virtual void Dispose (bool disposing)
 		{
+			//NOTE: for debugging, to be taken out
+			Android.Util.Log.Debug("Mono.Android", $"Java.Lang.Object Dispose(), Type={GetType()}, Handle={handle}");
 		}
 
 		internal static void Dispose (object instance, ref IntPtr handle, IntPtr key_handle, JObjectRefType handle_type)
