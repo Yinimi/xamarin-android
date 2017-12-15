@@ -108,6 +108,7 @@ OS_TYPE="`uname -s`"
 
 eval getInfo_$OS_TYPE || die "Your operating system is not supported."
 
+JAVA_HOME=`/usr/libexec/java_home -v 1.8`
 cat <<EOF > "$1"
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -127,8 +128,9 @@ cat <<EOF > "$1"
         <HostCc64 Condition=" '\$(HostCc64)' == '' ">$HOST_CC64</HostCc64>
         <HostCxx32 Condition=" '\$(HostCxx32)' == '' ">$HOST_CXX32</HostCxx32>
         <HostCxx64 Condition=" '\$(HostCxx64)' == '' ">$HOST_CXX64</HostCxx64>
-        <JavaCPath Condition=" '\$(JavaCPath)' == '' ">javac</JavaCPath>
-        <JarPath Condition=" '\$(JarPath)' == '' ">jar</JarPath>
+        <JavaSdkDirectory Condition=" '\$(JavaSdkDirectory)' == '' ">$JAVA_HOME</JavaSdkDirectory>
+        <JavaCPath Condition=" '\$(JavaCPath)' == '' ">\$(JavaSdkDirectory)/bin/javac</JavaCPath>
+        <JarPath Condition=" '\$(JarPath)' == '' ">\$(JavaSdkDirectory)/bin/jar</JarPath>
     </PropertyGroup>
 </Project>
 EOF
