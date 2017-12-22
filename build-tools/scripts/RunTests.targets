@@ -45,7 +45,7 @@
   <Target Name="RunJavaInteropTests">
     <MSBuild Projects="$(JavaInteropSourceDirectory)\Java.Interop.sln" Condition=" '$(HostOS)' == 'Windows' " />
     <Exec
-        Command ="make -C &quot;$(JavaInteropSourceDirectory)&quot; CONFIGURATION=$(Configuration) all"
+        Command ="make -C &quot;$(JavaInteropSourceDirectory)&quot; CONFIGURATION=$(Configuration) all JI_MAX_JDK=8"
         Condition=" '$(HostOS)' != 'Windows' "
     />
     <SetEnvironmentVariable Name="ANDROID_SDK_PATH" Value="$(AndroidSdkFullPath)" />
