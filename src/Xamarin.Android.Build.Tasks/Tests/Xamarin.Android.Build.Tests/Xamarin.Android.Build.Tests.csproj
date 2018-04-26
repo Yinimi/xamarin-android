@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuildTest.OSS.cs" />
+    <Compile Include="EmbeddinatorTest.cs" />
     <Compile Include="ManifestTest.OSS.cs" />
     <Compile Include="AndroidRegExTests.cs" />
     <Compile Include="GetDependenciesTests.cs" />

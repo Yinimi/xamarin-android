@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <EmbeddingIntermediateOutputPath Condition=" '$(EmbeddingIntermediateOutputPath)' == '' ">$(IntermediateOutputPath)embedding\</EmbeddingIntermediateOutputPath>
+  </PropertyGroup>
+  <Target Name="GenerateEmbeddedJavaStubs" DependsOnTargets="Build">
+    <GenerateJavaStubs
+      ResolvedAssemblies="@(_ResolvedAssemblies)"
+      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
+      ManifestTemplate="$(_AndroidManifestAbs)"
+      MergedManifestDocuments="@(ExtractedManifestDocuments)"
+      MergedAndroidManifestOutput="$(EmbeddingIntermediateOutputPath)AndroidManifest.xml"
+      AndroidSdkPlatform="$(_AndroidApiLevel)"
+      AndroidSdkDir="$(_AndroidSdkDirectory)"
+      OutputDirectory="$(EmbeddingIntermediateOutputPath)"
+      ResourceDirectory="$(MonoAndroidResDirIntermediate)"
+      AcwMapFile="$(_AcwMapFile)" />
+  </Target>
+</Project>
