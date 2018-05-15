@@ -218,6 +218,134 @@ namespace Xamarin.Android.Tests
 		}
 
 		[Test]
+		public void NetStandardLibChanges ()
+		{
+			var proj = new DotNetStandard () {
+				Language = XamarinAndroidProjectLanguage.CSharp,
+				ProjectName = "XamFormsSample",
+				ProjectGuid = Guid.NewGuid ().ToString (),
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard1.4",
+				PackageTargetFallback = "portable-net45+win8+wpa81+wp8",
+				PackageReferences = {
+					KnownPackages.XamarinFormsPCL_2_3_4_231,
+				},
+				OtherBuildItems = {
+					new BuildItem ("None") {
+						Remove = () => "**\\*.xaml",
+					},
+					new BuildItem ("Compile") {
+						Update = () => "**\\*.xaml.cs",
+						DependentUpon = () => "%(Filename)"
+					},
+					new BuildItem ("EmbeddedResource") {
+						Include = () => "**\\*.xaml",
+						SubType = () => "Designer",
+						Generator = () => "MSBuild:UpdateDesignTimeXaml",
+					},
+				},
+				Sources = {
+					new BuildItem.Source ("App.xaml.cs") {
+						TextContent = () => @"using Xamarin.Forms;
+
+namespace XamFormsSample
+{
+    public partial class App : Application
+    {
+        public App()
+        {
+            InitializeComponent();
+
+            MainPage = new ContentPage ();
+        }
+    }
+}",
+					},
+					new BuildItem.Source ("App.xaml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<Application xmlns=""http://xamarin.com/schemas/2014/forms""
+             xmlns:x=""http://schemas.microsoft.com/winfx/2009/xaml""
+             x:Class=""XamFormsSample.App"">
+</Application>",
+					},
+				},
+			};
+
+			var app = new XamarinAndroidApplicationProject () {
+				ProjectName = "App1",
+				UseLatestPlatformSdk = true,
+				References = {
+					new BuildItem.ProjectReference ($"..\\{proj.ProjectName}\\{proj.ProjectName}.csproj",
+						proj.ProjectName, proj.ProjectGuid),
+				},
+				PackageReferences = {
+					KnownPackages.SupportDesign_25_4_0_1,
+					KnownPackages.SupportV7CardView_24_2_1,
+					KnownPackages.AndroidSupportV4_25_4_0_1,
+					KnownPackages.SupportCoreUtils_25_4_0_1,
+					KnownPackages.SupportMediaCompat_25_4_0_1,
+					KnownPackages.SupportFragment_25_4_0_1,
+					KnownPackages.SupportCoreUI_25_4_0_1,
+					KnownPackages.SupportCompat_25_4_0_1,
+					KnownPackages.SupportV7AppCompat_25_4_0_1,
+					KnownPackages.XamarinForms_2_3_4_231,
+				}
+			};
+			app.MainActivity = @"using Android.App;
+using Android.Content;
+using Android.OS;
+using XamFormsSample;
+
+namespace App1
+{
+	[Activity (Label = ""App1"", MainLauncher = true, Icon = ""@drawable/icon"")]
+	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity {
+		protected override void OnCreate (Bundle bundle)
+		{
+			base.OnCreate (bundle);
+
+			global::Xamarin.Forms.Forms.Init (this, bundle);
+
+			LoadApplication (new App ());
+		}
+	}
+}";
+			var path = Path.Combine ("temp", "NetStandardLibChanges");
+			using (var b = CreateDllBuilder (Path.Combine (path, proj.ProjectName), cleanupOnDispose: false)) {
+				if (!Directory.Exists (b.MicrosoftNetSdkDirectory))
+					Assert.Ignore ("Microsoft.NET.Sdk not found.");
+				using (var ab = CreateApkBuilder (Path.Combine (path, app.ProjectName), cleanupOnDispose: false)) {
+					b.RequiresMSBuild = true;
+					b.Target = "Restore";
+					Assert.IsTrue (b.Build (proj), "XamFormsSample Nuget packages should have been restored.");
+					b.Target = "Build";
+					Assert.IsTrue (b.Build (proj), "XamFormsSample should have built.");
+					ab.RequiresMSBuild = true;
+					ab.Target = "Restore";
+					Assert.IsTrue (ab.Build (app), "Restore should have succeeded.");
+					ab.Target = "SignAndroidPackage";
+					Assert.IsTrue (ab.Build (app), "Build should have succeeded.");
+
+					//Update C# in netstandard project
+					var now = DateTime.UtcNow;
+					var start = now.AddSeconds (-1);
+					var appXaml = Path.Combine (Root, b.ProjectDirectory, "App.xaml.cs");
+					File.SetLastWriteTimeUtc (appXaml, now);
+					File.SetLastAccessTimeUtc (appXaml, now);
+					Assert.IsTrue (b.Build (proj), "XamFormsSample second build should have succeeded.");
+					Assert.IsTrue (ab.Build (app), "App second build should have succeeded.");
+
+					//None of these files should be *older* than the start time
+					var files = Directory.EnumerateFiles (Root, "XamFormsSample.dll", SearchOption.AllDirectories).ToList ();
+					foreach (var file in files) {
+						var info = new FileInfo (file);
+						Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void BuildIncrementingAssemblyVersion ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
