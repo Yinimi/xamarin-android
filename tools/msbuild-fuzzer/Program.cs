@@ -7,6 +7,8 @@ namespace MSBuild.Fuzzer
 {
 	class Program
 	{
+		static Random random;
+
 		static void Main ()
 		{
 			var temp = Path.Combine (Path.GetDirectoryName (typeof (Program).Assembly.Location));
@@ -28,9 +30,10 @@ namespace MSBuild.Fuzzer
 					() => Build (builder, project),
 					() => DesignTimeBuild (builder, project),
 					() => DesignerBuild (builder, project),
+					() => ChangePackageName (builder, project),
 				};
 
-				var random = new Random ();
+				random = new Random ();
 				while (true) {
 					var operation = operations [random.Next (operations.Length)];
 					success = operation ();
@@ -69,6 +72,13 @@ namespace MSBuild.Fuzzer
 		{
 			Console.WriteLine (nameof (DesignerBuild));
 			return builder.RunTarget (project, "SetupDependenciesForDesigner", doNotCleanupOnUpdate: true, parameters: DesignerParameters);
+		}
+
+		static bool ChangePackageName (ProjectBuilder builder, XamarinAndroidApplicationProject project)
+		{
+			Console.WriteLine (nameof (ChangePackageName));
+			project.PackageName = "com.foo.a" + Guid.NewGuid ().ToString ("N");
+			return true;
 		}
 	}
 }
