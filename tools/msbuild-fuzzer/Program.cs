@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using Xamarin.ProjectTools;
 
 namespace MSBuild.Fuzzer
@@ -8,29 +8,38 @@ namespace MSBuild.Fuzzer
 	class Program
 	{
 		static Random random;
+		static ProjectBuilder builder;
+		static XamarinFormsAndroidApplicationProject application;
 
 		static void Main ()
 		{
 			var temp = Path.Combine (Path.GetDirectoryName (typeof (Program).Assembly.Location));
-			using (var builder = new ProjectBuilder (Path.Combine ("temp", "Fuzzer")) {
+			using (builder = new ProjectBuilder (Path.Combine ("temp", "Fuzzer")) {
 				AutomaticNuGetRestore = false,
 				CleanupAfterSuccessfulBuild = false,
 				CleanupOnDispose = true,
 				Root = Xamarin.Android.Build.Paths.TestOutputDirectory,
 			}) {
-				var project = new XamarinFormsAndroidApplicationProject ();
-				var success = NuGetRestore (builder, project);
+				application = new XamarinFormsAndroidApplicationProject ();
+
+				var success = NuGetRestore ();
 				if (!success) {
 					Console.WriteLine ("Initial NuGet restore failed!");
 					return;
 				}
 
 				Func<bool> [] operations = {
-					() => NuGetRestore (builder, project),
-					() => Build (builder, project),
-					() => DesignTimeBuild (builder, project),
-					() => DesignerBuild (builder, project),
-					() => ChangePackageName (builder, project),
+					NuGetRestore,
+					Build,
+					DesignTimeBuild,
+					DesignerBuild,
+					ChangePackageName,
+					AddClass,
+					RemoveClass,
+					RenameClass,
+					AddResource,
+					RemoveResource,
+					RenameResource,
 				};
 
 				random = new Random ();
@@ -48,37 +57,137 @@ namespace MSBuild.Fuzzer
 			Console.ReadLine ();
 		}
 
-		static bool NuGetRestore (ProjectBuilder builder, XamarinAndroidApplicationProject project)
+		static bool NuGetRestore ()
 		{
 			Console.WriteLine (nameof (NuGetRestore));
-			return builder.RunTarget (project, "Restore", doNotCleanupOnUpdate: true);
+			return builder.RunTarget (application, "Restore", doNotCleanupOnUpdate: true);
 		}
 
-		static bool Build (ProjectBuilder builder, XamarinAndroidApplicationProject project)
+		static bool Build ()
 		{
 			Console.WriteLine (nameof (Build));
-			return builder.Build (project, doNotCleanupOnUpdate: true);
+			return builder.Build (application, doNotCleanupOnUpdate: true);
 		}
 
-		static bool DesignTimeBuild (ProjectBuilder builder, XamarinAndroidApplicationProject project)
+		static bool DesignTimeBuild ()
 		{
 			Console.WriteLine (nameof (DesignTimeBuild));
-			return builder.DesignTimeBuild (project, doNotCleanupOnUpdate: true);
+			return builder.DesignTimeBuild (application, doNotCleanupOnUpdate: true);
 		}
 
 		static readonly string [] DesignerParameters = new [] { "DesignTimeBuild=True", "AndroidUseManagedDesignTimeResourceGenerator=False" };
 
-		static bool DesignerBuild (ProjectBuilder builder, XamarinAndroidApplicationProject project)
+		static bool DesignerBuild ()
 		{
 			Console.WriteLine (nameof (DesignerBuild));
-			return builder.RunTarget (project, "SetupDependenciesForDesigner", doNotCleanupOnUpdate: true, parameters: DesignerParameters);
+			return builder.RunTarget (application, "SetupDependenciesForDesigner", doNotCleanupOnUpdate: true, parameters: DesignerParameters);
 		}
 
-		static bool ChangePackageName (ProjectBuilder builder, XamarinAndroidApplicationProject project)
+		static bool ChangePackageName ()
 		{
 			Console.WriteLine (nameof (ChangePackageName));
-			project.PackageName = "com.foo.a" + Guid.NewGuid ().ToString ("N");
+			application.PackageName = "com.foo.a" + RandomName ();
 			return true;
+		}
+
+		static bool AddClass ()
+		{
+			Console.WriteLine (nameof (AddClass));
+			application.Sources.Add (new Class ());
+			return true;
+		}
+
+		static bool RemoveClass ()
+		{
+			Console.WriteLine (nameof (RemoveClass));
+			for (int i = application.Sources.Count - 1; i >= 0; i--) {
+				if (application.Sources [i] is Class) {
+					application.Sources.RemoveAt (i);
+					break;
+				}
+			}
+			return true;
+		}
+
+		static bool RenameClass ()
+		{
+			Console.WriteLine (nameof (RemoveClass));
+			var clazz = application.Sources.OfType<Class> ().FirstOrDefault ();
+			if (clazz != null) {
+				clazz.Rename ();
+			}
+			return true;
+		}
+
+		static bool AddResource ()
+		{
+			Console.WriteLine (nameof (AddResource));
+			application.Sources.Add (new AndroidResource ());
+			return true;
+		}
+
+		static bool RemoveResource ()
+		{
+			Console.WriteLine (nameof (RemoveResource));
+			for (int i = application.Sources.Count - 1; i >= 0; i--) {
+				if (application.Sources [i] is AndroidResource) {
+					application.Sources.RemoveAt (i);
+					break;
+				}
+			}
+			return true;
+		}
+
+		static bool RenameResource ()
+		{
+			Console.WriteLine (nameof (RenameResource));
+			var resource = application.Sources.OfType<AndroidResource> ().FirstOrDefault ();
+			if (resource != null) {
+				resource.Rename ();
+			}
+			return true;
+		}
+
+		static string RandomName () => Guid.NewGuid ().ToString ("N");
+
+		class Class : BuildItem.Source
+		{
+			public string TypeName { get; set; }
+
+			public Class () : base (RandomName () + ".cs")
+			{
+				Rename ();
+				TextContent = () => $"public class Foo{TypeName} : Java.Lang.Object {{ }}";
+			}
+
+			public void Rename ()
+			{
+				TypeName = RandomName ();
+				Timestamp = null;
+			}
+		}
+
+		class AndroidResource : BuildItem
+		{
+			public string ResourceId { get; set; }
+
+			public string StringValue { get; set; }
+
+			public AndroidResource () : base ("AndroidResource", RandomName () + ".xml")
+			{
+				Rename ();
+				TextContent = () => $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""foo_{ResourceId}"">{StringValue}</string>
+</resources>";
+			}
+
+			public void Rename ()
+			{
+				ResourceId = RandomName ();
+				StringValue = RandomName ();
+				Timestamp = null;
+			}
 		}
 	}
 }
