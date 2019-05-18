@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using Xamarin.ProjectTools;
 
 namespace MSBuild.Fuzzer
@@ -10,6 +13,7 @@ namespace MSBuild.Fuzzer
 		static Random random;
 		static ProjectBuilder builder;
 		static XamarinFormsAndroidApplicationProject application;
+		static bool needsInstall = true;
 
 		static void Main ()
 		{
@@ -20,7 +24,14 @@ namespace MSBuild.Fuzzer
 				CleanupOnDispose = true,
 				Root = Xamarin.Android.Build.Paths.TestOutputDirectory,
 			}) {
+				if (Directory.Exists (builder.ProjectDirectory))
+					Directory.Delete (builder.ProjectDirectory, recursive: true);
+
 				application = new XamarinFormsAndroidApplicationProject ();
+				application.AndroidManifest = application.AndroidManifest.Replace ("<uses-sdk />", "<uses-sdk android:targetSdkVersion=\"28\" />");
+				application.MainActivity = application.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Android.Util.Log.Debug (\"FUZZER\", \"App started!\");");
+				var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86" };
+				application.SetProperty (KnownProperties.AndroidSupportedAbis, string.Join (";", abis));
 
 				var success = NuGetRestore ();
 				if (!success) {
@@ -33,6 +44,8 @@ namespace MSBuild.Fuzzer
 					Build,
 					DesignTimeBuild,
 					DesignerBuild,
+					Install,
+					Run,
 					ChangePackageName,
 					AddClass,
 					RemoveClass,
@@ -83,10 +96,71 @@ namespace MSBuild.Fuzzer
 			return builder.RunTarget (application, "SetupDependenciesForDesigner", doNotCleanupOnUpdate: true, parameters: DesignerParameters);
 		}
 
+		static bool Install ()
+		{
+			Console.WriteLine (nameof (Install));
+			if (!builder.RunTarget (application, "Install")) {
+				return false;
+			}
+			needsInstall = false;
+			return true;
+		}
+
+		static bool Run ()
+		{
+			Console.WriteLine (nameof (Run));
+			if (needsInstall && !Install ())
+				return false;
+			Adb ($"shell killall -9 {application.PackageName}", ignoreExitCode: true);
+			Adb ("logcat -c");
+			string activity = $"{application.PackageName}/md52d9cf6333b8e95e8683a477bc589eda5.MainActivity";
+			string start = Adb ($"shell am start -n {activity}");
+			Console.WriteLine (start.Trim ());
+			//Wait for the app to start
+			Thread.Sleep (3000);
+			string logcat = Adb ("logcat -d");
+			if (!logcat.Contains ("App started!")) {
+				Console.WriteLine (logcat);
+				throw new Exception ($"Activity {activity} did not start!");
+			}
+			return true;
+		}
+
+		static string Adb (string arguments, bool ignoreExitCode = false)
+		{
+			var info = new ProcessStartInfo {
+				FileName = "adb",
+				Arguments = arguments,
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+				UseShellExecute = false,
+				RedirectStandardError = true,
+				RedirectStandardOutput = true,
+			};
+			var builder = new StringBuilder ();
+			using (var process = new Process ()) {
+				process.StartInfo = info;
+				process.OutputDataReceived += (sender, e) => builder.AppendLine (e.Data);
+				process.ErrorDataReceived += (sender, e) => builder.AppendLine (e.Data);
+				process.Start ();
+				process.BeginErrorReadLine ();
+				process.BeginOutputReadLine ();
+				process.WaitForExit ();
+
+				if (!ignoreExitCode && process.ExitCode != 0) {
+					Console.WriteLine (builder);
+					throw new Exception ($"Adb exited with code: {process.ExitCode}");
+				}
+			}
+			return builder.ToString ();
+		}
+
 		static bool ChangePackageName ()
 		{
 			Console.WriteLine (nameof (ChangePackageName));
 			application.PackageName = "com.foo.a" + RandomName ();
+			application.Touch ("Properties\\AndroidManifest.xml");
+			needsInstall = true;
 			return true;
 		}
 
